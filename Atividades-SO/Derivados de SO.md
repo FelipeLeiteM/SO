@@ -91,42 +91,6 @@ Sua vantagem é a **eficiência e estabilidade**, permitindo iniciar e pausar jo
 
 # Tabelas Comparativas
 
-## Origem e Derivação
-
-| Sistema | Dispositivo Principal | Sistema Base / Derivado de | Desenvolvedor |
-|--------|----------------------|---------------------------|---------------|
-| Xbox One System Software | Xbox One | Windows | Microsoft |
-| Tizen | Smart TVs, relógios e IoT | Linux | Samsung / Linux Foundation |
-| Orbis OS | PlayStation 4 | FreeBSD (Unix-like) | Sony |
-| OpenWrt | Roteadores | Linux | Comunidade OpenWrt |
-| Horizon OS | Nintendo Switch | Arquitetura baseada em Unix | Nintendo |
-
----
-
-## Finalidade do Sistema
-
-| Sistema | Tipo de Dispositivo | Objetivo Principal |
-|--------|---------------------|--------------------|
-| Xbox One System Software | Console de videogame | Executar jogos e aplicativos com multitarefa |
-| Tizen | Dispositivos inteligentes | Interface e aplicativos para TVs e IoT |
-| Orbis OS | Console de videogame | Executar jogos com alto desempenho |
-| OpenWrt | Roteadores | Gerenciamento avançado de rede |
-| Horizon OS | Console híbrido | Executar jogos com eficiência energética |
-
----
-
-## Vantagens e Desvantagens
-
-| Sistema | Vantagens | Desvantagens |
-|--------|-----------|--------------|
-| Xbox One System Software | Multitarefa, integração com aplicativos e serviços online | Arquitetura mais complexa e maior consumo de recursos |
-| Tizen | Leve, eficiente para dispositivos domésticos e IoT | Ecossistema menor de aplicativos |
-| Orbis OS | Alto desempenho e otimização para jogos | Sistema fechado e pouca flexibilidade |
-| OpenWrt | Grande liberdade de configuração e controle de rede | Exige conhecimento técnico para uso avançado |
-| Horizon OS | Estável, rápido e eficiente no consumo de energia | Pouca possibilidade de personalização |
-
----
-
 ## 1. Origem e Derivação
 
 | Sistema | Dispositivo Principal | Sistema Base / Derivado de | Desenvolvedor |
