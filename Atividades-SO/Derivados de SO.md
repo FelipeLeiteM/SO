@@ -18,6 +18,8 @@ Sua principal vantagem é permitir **multitarefa**, como jogar enquanto download
 
 ## Tizen
 
+(https://commons.wikimedia.org/wiki/File:Tizen_Logo.png)
+
 O **Tizen** é um sistema operacional desenvolvido principalmente pela Samsung em parceria com a Linux Foundation. Ele é **derivado do kernel do Linux**.
 
 Nesse sistema, o kernel Linux gerencia o hardware e os processos, enquanto o Tizen fornece a interface e o ambiente de aplicativos. Ele é usado principalmente em:
