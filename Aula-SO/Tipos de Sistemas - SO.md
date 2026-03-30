@@ -1,5 +1,4 @@
-# Resumo — Aula 03  
-## Conceitos, Funções e Tipos de Sistemas Operacionais
+# Conceitos, Funções e Tipos de Sistemas Operacionais
 
 A aula apresenta uma visão ampla sobre sistemas operacionais, abordando seus conceitos fundamentais, tipos existentes e aplicações práticas no mercado. Além disso, introduz ferramentas de controle de versão, com foco em Git e integração com IDEs.
 
