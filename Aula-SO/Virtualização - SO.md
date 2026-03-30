@@ -1,4 +1,4 @@
-# Introdução à Virtualização — Resumo da Aula
+# Introdução à Virtualização
 
 ## O que é Virtualização
 Virtualização é uma tecnologia que permite executar **vários sistemas operacionais ao mesmo tempo em um único computador físico**. Isso é feito criando ambientes isolados que simulam hardware real, permitindo rodar diferentes sistemas sem interferir no sistema principal. :contentReference[oaicite:0]{index=0}
