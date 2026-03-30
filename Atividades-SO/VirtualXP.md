@@ -8,8 +8,8 @@ Este guia descreve, de forma estruturada, o processo de instalação do Windows 
 
 Antes de iniciar, certifique-se de possuir:
 
-- O software de virtualização :contentReference[oaicite:0]{index=0} instalado
-- Um arquivo ISO do sistema operacional :contentReference[oaicite:1]{index=1}
+- O software de virtualização "Oracle".
+- Um arquivo ISO do sistema operacional "WindowsXp".
 
 ---
 
