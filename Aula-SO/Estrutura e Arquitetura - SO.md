@@ -1,4 +1,4 @@
-# Resumo – Estrutura e Arquitetura de Sistemas Operacionais
+# Estrutura e Arquitetura de Sistemas Operacionais
 
 Esta aula apresenta os principais conceitos relacionados à estrutura e arquitetura de um sistema operacional, explicando como ele organiza e controla os recursos de um computador.
 
