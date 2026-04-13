@@ -1,308 +1,256 @@
-# Relatório de Modernização da Infraestrutura de TI
-**Empresa:** Desenvolvimento Web  
-**Data:** Abril de 2026  
-**Classificação:** Confidencial — Uso Interno
+## 1. Introdução
+
+A DevStore é uma startup de desenvolvimento de sites que enfrenta desafios críticos de escalabilidade, organização e segurança em sua infraestrutura de TI. Atualmente, a empresa opera com servidores locais sem padronização, o que dificulta o gerenciamento eficiente dos sistemas e compromete o crescimento sustentável do negócio. Além disso, o pipeline de desenvolvimento ocorre diretamente nas máquinas dos desenvolvedores, sem versionamento de código ou ambientes de testes formalizados.
 
 ---
 
-## Sumário Executivo
-
-A empresa enfrenta gargalos críticos de escalabilidade, segurança e governança decorrentes do uso de servidores locais heterogêneos e sem padronização. Este relatório propõe uma estratégia de modernização gradual, priorizando custo-benefício, com adoção de containerização, orquestração, pipelines automatizados e computação em nuvem híbrida — sem a necessidade de migração total e imediata para a nuvem.
-
-O objetivo é transformar a infraestrutura atual em um ambiente **previsível, seguro, escalável e gerenciável**, com investimento progressivo e retorno mensurável a cada etapa.
-
----
-
-## 1. Diagnóstico da Situação Atual
+## 2. Diagnóstico dos Problemas Atuais
 
 | Problema | Impacto |
 |---|---|
-| Servidores locais sem padronização | Dificuldade de manutenção, replicação e onboarding |
-| Ausência de ambientes isolados | Conflitos de dependências, instabilidade entre projetos |
-| Deploy manual e sem controle de versão de infra | Alto risco de falha humana e indisponibilidade |
-| Sem monitoramento centralizado | Problemas identificados apenas após impacto ao usuário |
-| Segurança baseada em perímetro físico | Vulnerável a ataques internos e falta de auditoria |
-| Escalabilidade horizontal inexistente | Crescimento limitado pela capacidade física dos servidores |
+| Servidores locais sem padronização | Dificuldade de gerenciamento e replicação de ambientes |
+| Desenvolvimento direto na máquina local | Risco de inconsistências entre ambientes dev/produção |
+| Ausência de testes automatizados | Alta chance de bugs chegarem à produção |
+| Falta de versionamento de código | Impossibilidade de rastrear mudanças e reverter falhas |
+| Sem escalabilidade | Incapacidade de atender crescimento da demanda |
+| Segurança não formalizada | Vulnerabilidades e riscos de violação de dados |
 
 ---
 
-## 2. Estratégia de Modernização em 3 Fases
+## 3. Arquitetura Proposta
 
-A abordagem é incremental: cada fase gera valor imediato e prepara o terreno para a seguinte, sem exigir um "big bang" de migração.
+A solução é organizada em quatro camadas complementares:
+
+```
+[ Máquina do Desenvolvedor ]
+         ↓  Git + Docker (ambiente local padronizado)
+[ Ambiente de Testes — VMs Isoladas ]
+         ↓  Pipeline CI/CD (testes automatizados)
+[ Ambiente de Homologação — Containers Docker ]
+         ↓  Deploy automatizado
+[ Produção — Nuvem AWS ]
+```
+
+### 3.1 Ambientes
+
+**Desenvolvimento (Local)**  
+Cada desenvolvedor trabalhará com um container Docker local, garantindo que o ambiente seja idêntico ao de produção. O código será versionado via Git com branches para cada funcionalidade.
+
+**Testes (Virtualizado)**  
+Máquinas virtuais (VMs) isoladas serão provisionadas para execução de testes de integração e segurança. O isolamento total das VMs protege o ambiente de produção de eventuais falhas durante os testes.
+
+**Homologação (Containerizado)**  
+Ambiente em containers Docker, espelhando a produção, onde a equipe valida as entregas antes do deploy final.
+
+**Produção (Nuvem — AWS)**  
+Hospedagem das aplicações na AWS, com alta disponibilidade, escalabilidade automática e redundância geográfica.
 
 ---
 
-### Fase 1 — Padronização e Containerização (0–3 meses)
-**Custo estimado: baixo | Impacto: alto**
+## 4. Planejamento de Virtualização
 
-#### 2.1 Containerização com Docker
+### 4.1 Finalidade
 
-Todos os projetos e serviços devem ser encapsulados em **contêineres Docker**. Isso resolve imediatamente o problema de ambientes inconsistentes entre desenvolvedores, servidores de staging e produção.
+As máquinas virtuais serão utilizadas exclusivamente para ambientes de testes isolados, onde é necessário simular configurações de sistema operacional distintas (ex: diferentes versões de Linux ou Windows Server) sem impacto nos demais ambientes.
 
-**Benefícios diretos:**
-- "Funciona na minha máquina" deixa de existir como problema
-- Isolamento de dependências por projeto
-- Imagens versionadas e auditáveis
-- Reprodutibilidade total do ambiente
+### 4.2 Tecnologia Sugerida
 
-**Estrutura recomendada por projeto:**
-```
-projeto/
-├── Dockerfile
-├── docker-compose.yml       # ambiente local e staging
-├── .env.example
-└── .dockerignore
-```
+- **Hypervisor:** VirtualBox (desenvolvimento local) ou VMware ESXi (ambiente corporativo)
+- **Sistema Operacional Guest:** Ubuntu Server 22.04 LTS
 
-**Boas práticas de imagem:**
-- Usar imagens base oficiais e leves (ex: `node:20-alpine`, `nginx:alpine`)
-- Separar imagem de build da imagem de runtime (multi-stage builds)
-- Nunca incluir secrets em imagens; usar variáveis de ambiente
+### 4.3 Configuração das VMs de Teste
 
-#### 2.2 Virtualização para Otimização dos Servidores Locais
-
-Enquanto a migração para nuvem não é completa, os servidores físicos existentes devem ser virtualizados com **Proxmox VE** (solução open source e gratuita) ou **VMware ESXi Free**.
-
-**Ganhos imediatos:**
-- Consolidação de servidores: múltiplas VMs em um único host físico
-- Snapshots antes de atualizações críticas (rollback instantâneo)
-- Isolamento entre ambientes (dev, staging, produção) na mesma máquina física
-- Redução de custos com hardware
-
-#### 2.3 Repositório Centralizado de Configuração
-
-Adotar **Infrastructure as Code (IaC)** com arquivos versionados em Git:
-- Toda configuração de servidor, variáveis de ambiente (sem secrets) e dependências documentadas em repositório privado
-- Uso de **Ansible** para automação de configuração de servidores (gratuito, sem agente)
-
----
-
-### Fase 2 — Orquestração, Pipeline e Segurança (3–6 meses)
-**Custo estimado: médio-baixo | Impacto: muito alto**
-
-#### 2.4 Orquestração com Docker Swarm ou Kubernetes Leve
-
-Para orquestração de contêineres sem a complexidade total do Kubernetes, recomenda-se iniciar com **Docker Swarm** (nativo no Docker) ou **K3s** (Kubernetes leve, ideal para infraestrutura enxuta).
-
-**Docker Swarm** é indicado se a equipe ainda está amadurecendo em DevOps.  
-**K3s** é indicado se há planos de crescimento de equipe e projetos nos próximos 12 meses.
-
-Funcionalidades habilitadas:
-- Escalabilidade horizontal automática (múltiplas réplicas de um serviço)
-- Reinício automático de contêineres com falha
-- Balanceamento de carga interno
-- Atualizações sem downtime (rolling updates)
-
-#### 2.5 Pipeline de CI/CD
-
-Implementar pipeline de **Integração Contínua e Entrega Contínua** com **GitHub Actions** (gratuito até determinado volume) ou **GitLab CI** (self-hosted gratuito).
-
-**Fluxo de pipeline recomendado:**
-
-```
-[Push no Git]
-     │
-     ▼
-[Lint + Testes Unitários]
-     │
-     ▼
-[Build da Imagem Docker]
-     │
-     ▼
-[Push para Registry Privado]
-     │
-     ▼
-[Deploy automático em Staging]
-     │
-     ▼
-[Aprovação manual ou automática]
-     │
-     ▼
-[Deploy em Produção com rollback disponível]
-```
-
-**Ferramentas recomendadas (gratuitas ou low-cost):**
-- **GitHub Actions** ou **GitLab CI** — pipeline
-- **Harbor** (self-hosted) ou **GitHub Container Registry** — registry de imagens
-- **Watchtower** — atualização automática de contêineres em produção
-
-#### 2.6 Segurança da Infraestrutura
-
-**Rede e acesso:**
-- Implementar **VPN interna** (WireGuard — gratuito, leve e moderno) para acesso remoto seguro aos servidores
-- Eliminar acesso SSH direto por senha; usar exclusivamente **chaves SSH com passphrase**
-- Princípio do menor privilégio: cada serviço/desenvolvedor com apenas as permissões necessárias
-
-**Segredos e credenciais:**
-- Usar **HashiCorp Vault** (free tier) ou **Doppler** para gerenciamento centralizado de secrets
-- Nunca versionar arquivos `.env` com credenciais reais no Git
-- Rotação periódica de senhas e tokens
-
-**Monitoramento e alertas:**
-- **Prometheus + Grafana** (stack open source): métricas de CPU, memória, disco, latência e disponibilidade
-- **Loki** para centralização de logs
-- Alertas configurados para anomalias (picos, serviços caídos, uso de disco crítico)
-
-**Backups:**
-- Política 3-2-1: 3 cópias, 2 mídias diferentes, 1 offsite
-- Automatizar backups com **Restic** (open source, criptografado, incremental)
-- Testar restauração mensalmente
-
----
-
-### Fase 3 — Nuvem Híbrida e Escalabilidade Sustentável (6–12 meses)
-**Custo estimado: variável conforme uso | Impacto: estratégico**
-
-#### 2.7 Adoção de Nuvem Híbrida
-
-A estratégia híbrida preserva o investimento nos servidores locais enquanto adiciona capacidade elástica na nuvem para picos de demanda.
-
-**Arquitetura recomendada:**
-
-```
-[Servidores Locais — workloads estáveis e sensíveis]
-        │
-        │  VPN / Rede privada
-        │
-[Nuvem — workloads variáveis, CDN, backups offsite]
-```
-
-**Provedores recomendados para empresas brasileiras (custo-benefício):**
-
-| Provedor | Diferencial | Indicado para |
-|---|---|---|
-| **Hetzner Cloud** | Preço muito competitivo, datacenter na Europa | Servidores de app, staging |
-| **Cloudflare** | CDN + WAF gratuito/barato, Workers | Proteção, performance, funções edge |
-| **AWS / GCP Free Tier** | Amplitude de serviços | Testes, funções serverless pontuais |
-| **Oracle Cloud Free Tier** | 2 VMs gratuitas permanentes | Staging, monitoramento |
-
-**Recomendação inicial de baixo custo:**
-- Cloudflare (gratuito) para CDN, proteção DDoS e DNS
-- 1–2 VMs na Hetzner (~€4–€10/mês) para serviços complementares
-- Oracle Cloud Free Tier para ambiente de staging permanente sem custo
-
-#### 2.8 Escalabilidade Horizontal
-
-Com os contêineres orquestrados e a infraestrutura híbrida, a escalabilidade horizontal passa a ser:
-- **Automática**: baseada em métricas (CPU, requisições por segundo)
-- **Rápida**: novos contêineres sobem em segundos
-- **Econômica**: paga-se apenas pelo uso extra na nuvem; servidores locais cobrem a carga base
-
----
-
-## 3. Arquitetura-Alvo Resumida
-
-```
-┌─────────────────────────────────────────────────────┐
-│                   CLOUDFLARE                        │
-│         CDN · WAF · DDoS · DNS · Zero Trust         │
-└────────────────────┬────────────────────────────────┘
-                     │ HTTPS
-┌────────────────────▼────────────────────────────────┐
-│              LOAD BALANCER / NGINX                  │
-└──────┬──────────────────────────────────┬───────────┘
-       │                                  │
-┌──────▼──────────┐              ┌────────▼────────────┐
-│  SERVIDORES     │              │  NUVEM (Hetzner /   │
-│  LOCAIS         │              │  Oracle Free Tier)  │
-│  (VMs + Docker  │◄──── VPN ───►│  (overflow / CDN /  │
-│   Swarm / K3s)  │              │   staging)          │
-└──────┬──────────┘              └─────────────────────┘
-       │
-┌──────▼──────────────────────────────────────────────┐
-│  STACK DE OBSERVABILIDADE                           │
-│  Prometheus · Grafana · Loki · Alertmanager         │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-## 4. Ferramentas Recomendadas — Resumo
-
-| Categoria | Ferramenta | Custo |
-|---|---|---|
-| Containerização | Docker + Docker Compose | Gratuito |
-| Virtualização local | Proxmox VE | Gratuito |
-| Orquestração | Docker Swarm ou K3s | Gratuito |
-| IaC / Config | Ansible | Gratuito |
-| CI/CD Pipeline | GitHub Actions / GitLab CI | Gratuito (self-hosted) |
-| Registry de imagens | GitHub Container Registry | Gratuito |
-| Secrets Manager | HashiCorp Vault / Doppler | Gratuito / ~$10/mês |
-| VPN interna | WireGuard | Gratuito |
-| Monitoramento | Prometheus + Grafana + Loki | Gratuito |
-| Backup | Restic + storage offsite | ~$5/mês |
-| CDN + WAF | Cloudflare | Gratuito (plano básico) |
-| Nuvem overflow | Hetzner Cloud | ~€5–15/mês |
-| Staging gratuito | Oracle Cloud Free Tier | Gratuito |
-
-**Custo mensal estimado total: R$ 50–200/mês** (na fase inicial), com capacidade de escalar sob demanda.
-
----
-
-## 5. Cronograma de Implementação
-
-```
-Mês 1-2  │ Dockerização dos projetos existentes
-          │ Configuração do Proxmox nos servidores locais
-          │ Repositório Git de infraestrutura (IaC)
-
-Mês 2-3  │ Pipeline CI/CD básico (GitHub Actions)
-          │ Registry privado de imagens
-          │ WireGuard VPN + hardening SSH
-
-Mês 3-4  │ Docker Swarm ou K3s em produção
-          │ Prometheus + Grafana + alertas
-          │ Política de backup automatizado
-
-Mês 4-6  │ HashiCorp Vault para secrets
-          │ Cloudflare CDN + WAF ativado
-          │ Documentação de runbooks e postmortems
-
-Mês 6-12 │ Nuvem híbrida (Hetzner overflow)
-          │ Autoscaling configurado
-          │ Revisão de segurança e pentest básico
-```
-
----
-
-## 6. Benefícios Esperados
-
-| Dimensão | Antes | Depois |
-|---|---|---|
-| **Escalabilidade** | Limitada por hardware físico | Horizontal e automática |
-| **Deploy** | Manual, arriscado | Automatizado, com rollback |
-| **Disponibilidade** | Reativa (descoberta após falha) | Proativa (alertas antecipados) |
-| **Segurança** | Perímetro físico, sem auditoria | VPN, secrets gerenciados, WAF |
-| **Onboarding dev** | Dias para configurar ambiente | Horas com Docker Compose |
-| **Custo de crescimento** | Linear (comprar servidor) | Elástico (paga pelo uso) |
-| **Rastreabilidade** | Nenhuma | Total (logs, métricas, audit trail) |
-
----
-
-## 7. Riscos e Mitigações
-
-| Risco | Mitigação |
+| Parâmetro | Valor Recomendado |
 |---|---|
-| Resistência da equipe à mudança | Treinamentos graduais; iniciar com projetos novos |
-| Quebra de serviços durante migração | Rodar ambientes paralelos; migração sem desligar o antigo |
-| Curva de aprendizado em Docker/K8s | Começar pelo Docker Swarm (mais simples); investir em documentação interna |
-| Dependência de fornecedor de nuvem | Arquitetura baseada em contêineres é portável entre provedores |
-| Custo inesperado na nuvem | Definir budgets e alertas de gasto desde o início |
+| vCPUs | 2 |
+| Memória RAM | 2 GB |
+| Armazenamento | 20 GB (disco dinâmico) |
+| Rede | NAT ou Host-Only (isolada) |
+| Snapshot | Habilitado (antes de cada ciclo de testes) |
+
+### 4.4 Controle de Consumo de Recursos
+
+- Limitar CPUs e RAM via configuração do hypervisor por VM
+- Monitorar uso com ferramentas como `htop`, `vmstat` e relatórios do hypervisor
+- Desligar VMs automaticamente após conclusão dos testes (scripts de automação)
 
 ---
 
-## 8. Conclusão e Próximos Passos
+## 5. Planejamento de Containerização com Docker
 
-A modernização proposta não exige grandes investimentos iniciais nem a descontinuação imediata dos servidores locais. Ao padronizar com Docker, versionar a infraestrutura, automatizar deploys e adicionar monitoramento, a empresa obtém ganhos expressivos de qualidade, segurança e produtividade ainda nos primeiros 90 dias.
+### 5.1 Justificativa
 
-A nuvem entra como complemento estratégico — e não substituição total — garantindo escalabilidade sob demanda sem custos fixos elevados.
+A containerização oferece melhor desempenho e menor consumo de recursos em comparação com máquinas virtuais, sendo mais adequada para os ambientes de homologação e produção da DevStore. O Docker garante portabilidade e padronização dos ambientes.
 
-**Ações imediatas recomendadas (semana 1):**
-1. Auditar todos os serviços em produção e documentar dependências
-2. Criar repositório Git dedicado para infraestrutura
-3. Dockerizar o primeiro projeto como projeto piloto
-4. Instalar Proxmox VE em pelo menos um servidor físico
+### 5.2 Estrutura de Containers
+
+```
+devstore/
+├── docker-compose.yml
+├── services/
+│   ├── frontend/          # Aplicação web (Node.js / React)
+│   │   └── Dockerfile
+│   ├── backend/           # API (ex: Node.js / Python)
+│   │   └── Dockerfile
+│   └── database/          # Banco de dados (PostgreSQL)
+│       └── Dockerfile
+└── nginx/                 # Proxy reverso
+    └── Dockerfile
+```
+
+### 5.3 Controle de Recursos dos Containers
+
+- Utilizar `--cpus` e `--memory` para limitar recursos por container
+- Monitorar com `docker stats` em tempo real
+- Integrar com Prometheus + Grafana para dashboards de métricas
 
 ---
 
-*Relatório elaborado com base em boas práticas de DevOps, arquitetura de software e segurança de infraestrutura. Recomenda-se revisão trimestral deste documento conforme a evolução da infraestrutura.*
+## 6. Computação em Nuvem — AWS
+
+### 6.1 Serviços AWS Propostos
+
+| Serviço | Finalidade |
+|---|---|
+| **EC2** | Instâncias de servidores para hospedar os containers |
+| **ECS / EKS** | Orquestração de containers em produção |
+| **RDS** | Banco de dados gerenciado (PostgreSQL) |
+| **S3** | Armazenamento de arquivos estáticos e backups |
+| **CloudFront** | CDN para entrega rápida de conteúdo |
+| **VPC** | Rede privada isolada para os serviços |
+| **IAM** | Controle de acesso e permissões |
+| **CloudWatch** | Monitoramento e alertas |
+| **Auto Scaling** | Escalabilidade automática conforme demanda |
+
+### 6.2 Configuração de Rede (VPC)
+
+```
+VPC: 10.0.0.0/16
+├── Sub-rede Pública: 10.0.1.0/24   (load balancer, CloudFront)
+├── Sub-rede Privada: 10.0.2.0/24   (servidores de aplicação)
+└── Sub-rede de Dados: 10.0.3.0/24  (banco de dados RDS)
+```
+
+- **Security Groups:** regras de firewall por camada (web, app, banco)
+- **NAT Gateway:** permite que sub-redes privadas acessem a internet sem exposição direta
+
+### 6.3 Armazenamento
+
+- **EBS:** volumes persistentes para as instâncias EC2
+- **S3:** backups automáticos diários e armazenamento de assets
+- **RDS Multi-AZ:** banco de dados com replicação em múltiplas zonas de disponibilidade
+
+---
+
+## 7. Segurança
+
+### 7.1 Controle de Acesso
+
+- Criação de grupos de usuários no **AWS IAM** com permissões mínimas necessárias (princípio do menor privilégio)
+- Autenticação com MFA (Multi-Factor Authentication) para todos os usuários com acesso à console AWS
+- Chaves SSH para acesso às instâncias EC2 (senhas desabilitadas)
+
+### 7.2 Firewall e Redes
+
+- **Security Groups AWS:** liberar apenas as portas necessárias (80, 443 para web; 5432 restrito à sub-rede privada para banco)
+- **Network ACLs:** camada adicional de controle no nível de sub-rede
+- Uso de HTTPS em todos os endpoints com certificado SSL via **AWS Certificate Manager**
+
+### 7.3 Monitoramento Contínuo
+
+- **AWS CloudWatch:** alertas de uso de CPU, memória, erros e latência
+- **AWS CloudTrail:** auditoria completa de todas as ações realizadas na conta AWS
+- **Logs centralizados:** agregação de logs de aplicação no CloudWatch Logs
+
+---
+
+## 8. Pipeline de Desenvolvimento Otimizado
+
+```
+Desenvolvedor → Git Push
+      ↓
+GitHub/GitLab (versionamento)
+      ↓
+CI/CD Pipeline (GitHub Actions / GitLab CI)
+      ↓
+Testes Automatizados (ambiente VM isolado)
+      ↓
+Build da imagem Docker
+      ↓
+Push para registro de imagens (ECR - AWS)
+      ↓
+Deploy em Homologação (containers)
+      ↓
+Aprovação Manual
+      ↓
+Deploy em Produção (AWS ECS/EKS)
+```
+
+**Ferramentas recomendadas:**
+- Versionamento: Git + GitHub ou GitLab
+- CI/CD: GitHub Actions ou GitLab CI
+- Registro de imagens: Amazon ECR
+- Orquestração: AWS ECS (Fargate) para início; migrar para EKS conforme escala
+
+---
+
+## 9. Papel do Sistema Operacional em Cada Camada
+
+| Camada | Sistema Operacional | Papel |
+|---|---|---|
+| **Local (Dev)** | Ubuntu 22.04 / macOS / Windows + WSL2 | Hospeda o Docker Desktop e ferramentas de desenvolvimento |
+| **VMs de Teste** | Ubuntu Server 22.04 LTS | Ambiente isolado para testes; o SO garante separação total de recursos |
+| **Containers** | Linux (kernel compartilhado via Docker) | O SO do host é compartilhado entre containers; namespaces e cgroups garantem isolamento |
+| **Nuvem (AWS EC2)** | Amazon Linux 2023 / Ubuntu Server | Gerencia recursos físicos, processos, rede e armazenamento das instâncias |
+
+O sistema operacional é fundamental em todas as camadas: gerencia processos, memória, sistema de arquivos, rede e segurança — sendo a base sobre a qual virtualização, containers e serviços em nuvem operam.
+
+---
+
+## 10. Estratégias de Implantação, Manutenção e Expansão
+
+### Implantação
+
+1. Configurar repositório Git e definir política de branches (main, develop, feature/*)
+2. Criar Dockerfiles e docker-compose para todos os serviços
+3. Configurar pipeline CI/CD com testes automatizados
+4. Provisionar infraestrutura AWS (VPC, EC2, RDS, S3)
+5. Realizar deploy inicial com acompanhamento manual
+
+### Manutenção
+
+- Atualização de imagens Docker mensalmente (patches de segurança)
+- Revisão de Security Groups e políticas IAM trimestralmente
+- Backups diários automáticos no S3 com retenção de 30 dias
+- Revisão de alertas do CloudWatch semanalmente
+- Testes de recuperação de desastres semestralmente
+
+### Expansão
+
+- Ativar **Auto Scaling** no ECS para lidar com picos de demanda
+- Migrar para **Kubernetes (EKS)** quando o número de microserviços justificar
+- Adotar **Infrastructure as Code** com Terraform para replicar ambientes com agilidade
+- Implementar **CDN (CloudFront)** para atender clientes internacionais com baixa latência
+- Considerar **multi-região AWS** para alta disponibilidade geográfica quando necessário
+
+---
+
+## 11. Justificativas das Escolhas Técnicas
+
+| Decisão | Justificativa |
+|---|---|
+| **Docker** em vez de apenas VMs | Menor consumo de recursos, portabilidade e rapidez de deployment |
+| **VMs para testes** | Isolamento total necessário para testes que podem comprometer o SO |
+| **AWS** como provedor cloud | Ampla documentação, serviços gerenciados robustos e escalabilidade comprovada |
+| **Ubuntu Server** nas VMs | Estabilidade, suporte LTS, excelente compatibilidade com Docker e vasto ecossistema |
+| **PostgreSQL** como banco | Open source, robusto, suportado pelo RDS e compatível com a stack proposta |
+| **Git** para versionamento | Padrão da indústria, integração nativa com CI/CD e rastreabilidade completa |
+| **Pipeline CI/CD** | Automatiza testes e reduz erros humanos no processo de entrega |
+
+---
+
+## 12. Conclusão
+
+A arquitetura proposta para a DevStore combina virtualização, containerização e computação em nuvem de forma complementar, endereçando todos os desafios identificados: falta de padronização, ausência de testes, riscos de segurança e limitações de escalabilidade. A adoção gradual dessa infraestrutura — começando pela containerização local e evoluindo para a nuvem — permite que a empresa cresça de forma sustentável, com controle de custos e alta disponibilidade dos serviços.
+
+---
